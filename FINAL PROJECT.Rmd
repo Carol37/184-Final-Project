@@ -1,0 +1,208 @@
+---
+title: "STAT 184 PROJECT" 
+author: "Jinhan Li"
+output: html_notebook
+---
+
+
+```{r}
+# load packages
+library(ggplot2)
+library(dplyr)
+library(usmap)
+library(usdata)
+```
+
+## Guiding Question
+
+What is the distribution of shootings in each state and the relationships between race and shootings in the U.S.?
+
+
+## Become acquainted with data sources
+
+* I found my primary data source "Shootings" in a data set named "US Police Shootings" on Kaggle. I found my second data source "ZipGeography" in DataComputing package in R.
+
+* Ahsen Nazir collected and maintains the "Shootings" data source, Daniel Kaplan collected and maintains the "ZipGeography" data source in DataComputing package in R.
+
+* "Shootings" data source was collected on 2020-07-29, and the collector collected this data because in the recent killings, "Racism" became a hot topic, so he gathered shootings data to analyze racism in America. "ZipGeography" data source was published on 2016-12-22, and the collector intended to compile the DataComputing package with "ZipGeography" as one data set to offer sample data set for R users to perform data analysis on U.S. geography.
+
+```{r}
+head(shootings)
+```
+
+```{r}
+str(shootings)
+```
+```{r}
+summary(shootings)
+```
+
+
+```{r}
+head(ZipGeography)
+```
+
+```{r}
+str(ZipGeography)
+```
+```{r}
+summary(ZipGeography)
+```
+
+
+* A case in "Shootings" represents a shooting incident in the U.S; and 4895 cases are available. A case in "ZipGeography" represents an area zip code in the U.S. with its location, population etc.; and 42741 cases are available.
+
+* I plan to use name, date, age, gender, race, state, and arms_category variables in "Shootings" data source; I plan to use State and Population variables in "ZipGeography" data source.
+
+
+
+## Explore intuition related to the research question
+
+### Informative plots and summary statistics 
+
+```{r}
+shooting <- shootings %>% filter(state!="") %>% select(name, date, age, gender, race, state, arms_category) %>% mutate(state=abbr2state(state))
+shooting
+```
+
+```{r}
+pop <- ZipGeography %>% filter(State!="") %>% group_by(State) %>% summarise(Population=sum(Population, na.rm = TRUE))
+pop
+```
+
+```{r}
+pop_p <- pop %>% mutate(state=State)
+plot_usmap(data=pop_p, values = "Population", color = "brown", labels=TRUE) +
+   scale_fill_continuous(low = "white", high = "brown", name = "Population by states", label = scales::comma)+
+   theme(legend.position = "right") +
+   ggtitle("Population By States")
+```
+
+```{r}
+bystate <- shooting %>% group_by(state) %>% summarise(count = n()) 
+bystate
+```
+
+```{r}
+plot_usmap(data=bystate, values = "count", color = "darkblue", labels=TRUE) +
+   scale_fill_continuous(low = "white", high = "darkblue", name = "Shooting frequency by states", label = scales::comma)+
+   theme(legend.position = "right") +
+   ggtitle("Shooting Frequency By States")
+```
+```{r}
+bystate %>% mutate(state=state2abbr(state)) %>%
+  ggplot(aes(x=state, y=count), ) +
+  geom_bar(stat='identity', aes(fill=state)) +
+  ggtitle("Shooting Case Counts By States") +
+  theme(axis.text.x = element_text(size = 3))
+```
+
+```{r}
+byrace <- shooting %>% group_by(race) %>% summarise(count = n())
+byrace
+```
+
+```{r}
+byrace %>% 
+  ggplot(aes(x=race, y=count)) +
+  geom_bar(stat='identity', aes(fill=race)) +
+  ggtitle("Shooting Case Counts By Race") 
+```
+
+```{r}
+bygender <- shooting %>% group_by(gender) %>% summarise(count = n())
+bygender
+```
+
+```{r}
+bygender %>% 
+  ggplot(aes(x=gender, y=count)) +
+  geom_bar(stat='identity', aes(fill=gender)) +
+  ggtitle("Shooting Case Counts By Gender") 
+```
+
+```{r}
+byrace_state <- shooting %>% group_by(state,race) %>% summarise(count = n())
+byrace_state
+```
+
+```{r}
+den_state <- bystate %>% inner_join(pop, by=c("state"="State")) %>% mutate(density=count/Population) %>% arrange(desc(density))
+den_state
+```
+```{r}
+plot_usmap(data=den_state, values = "density", color = "purple", labels=TRUE) +
+   scale_fill_continuous(low = "white", high = "purple", name = "Shooting density by states", label = scales::comma)+
+   theme(legend.position = "right") +
+   ggtitle("Shooting Density By States")
+```
+
+```{r}
+total <- pop %>% select(Population) %>% summarise(sum(Population))
+den_race <- byrace %>% mutate(Population=281154175) %>% mutate(density=count/Population) %>% arrange(desc(density))
+den_race
+```
+
+```{r}
+den_race %>% 
+  ggplot(aes(x=race, y=density)) +
+  geom_bar(stat='identity', aes(fill=race)) +
+  ggtitle("Shooting Case Density By Race") 
+```
+
+```{r}
+shooting %>% mutate(date=substr(as.character(date), 1,4)) %>% group_by(date, race) %>% summarise(total=n()) %>%
+  ggplot(aes(x=date, y=total)) +
+  geom_point(aes(color=race)) +
+  geom_line(aes(group=race, color=race)) +
+  ggtitle("Shooting Case Counts By Race 2015-2020") 
+```
+```{r}
+shootings %>% mutate(date=substr(as.character(date), 1,7)) %>%
+  filter(substr(date,1,4)==2020 | substr(date,1,4)==2019) %>% 
+  ggplot(aes(x=date, group=race)) + 
+  geom_density(aes(color=race, fill=race), alpha=0.3)+
+  facet_wrap(~race)+
+  theme(axis.text.x = element_text(angle=90, size=5))+
+  ggtitle("Shooting Case Density By Race 2019-2020") 
+```
+```{r}
+shootings %>% 
+  mutate(date=substr(as.character(date), 1,7)) %>% 
+  ggplot(aes(x=date, group=race)) + 
+  geom_density(aes(color=race, fill=race), alpha=0.3)+
+  facet_wrap(~race)+
+  theme(axis.text.x = element_text(angle=90, size=3))+
+  ggtitle("Shooting Case Density By Race 2015-2020") 
+```
+
+
+### Preliminary observations and intuition about the research question
+
+  Using the "Shootings" data source and "ZipGeography" data source, I was able to perform a join on the transformed data tables and get some observations from it. First of all, I graphed a U.S. map of the population density in each state to get a sense of the population distribution in the U.S., and it turns out that California, Texas, Florida and New York have the most population. 
+  And then, I used the transformed shooting data table to group by state and calculate the total count of shooting cases in each state, then I graphed it on a U.S. map to show the frequency of shootings in each state. Also, I graphed the shooting frequencies based on the states using a bar plot. Both of them showed that California, Texas and Florida have the most shootings.
+  
+  Moreover, I grouped shooting table by race and calculated the total counts of cases of each race and then graphed a bar plot to display the frequency of cases of each race in the past five years. The graph shows that white has the most shooting cases and black has the second most shooting cases. And based on this observation, surprisingly, black people aren't encountering the most shootings like I thought.
+  
+  Also, I grouped the shooting table by gender and plotted a bar plot to display the total counts of shootings of each gender, and as I expected, most shootings happened to males than females. And then, I grouped the table by state and race to take a look at the counts of shootings by both state and race, and the result shows for most states, white people are facing the most shootings.
+  
+  After I made some observations from the two data sources individually, I aggregated the ZipGeography table by state and transformed the table into a new population table with the state and its total population. And then, I joined the shooting table with the population table on state to get more observations. I first calculated the density of shootings in each state using the count of shootings in each state divided by its total population, and then graphed it on a map to show the density based on the color. In the graph, apparently, Alaska, New Mexico, Oklahoma and Arizona have the most dense shootings. I also graphed the shooting density by race using the counts of shootings of each race divided by the total population in the U.S., and apparently, white people are facing the most dense shootings followed by black people.
+  
+  Moreover, I grouped the shooting table by year and calculated the sum of shootings by race in each year and graphed them using a point plot and line plot, grouped and colored by race. On the plot, we can clearly see that white people are facing the most shootings comparing to all other races followed by black people and then Hispanics, when native, asian and others are facing the least shootings.
+  
+  Finally, I graphed the density plot of shootings for different race and I first plotted the data from 2019 to 2020, and then I graphed the entire range of data from 2015 to 2020. Based on the density plots, we can see that from 2019 to 2020, white people are facing the most shootings in November 2019 and black people are facing the most shootings in December 2019, and Hispanics are facing the most shootings in May 2019. At the meanwhile, in the entire time spam from 2015 to 2019, white people are facing the most shootings in 2015 and black people are facing the most shootings in 2015, and Hispanics are facing the most shootings in 2017.
+  
+  Overall, there are a few states facing the most shootings which are California, Texas and Florida. And that racism plays a part in shootings because according to my analysis, white people and black people tend to face the most shootings when the other races are facing the least shootings.
+
+
+## TWO Data Sources
+
+```{r}
+shootings
+```
+```{r}
+ZipGeography
+```
+The primary data source is a kaggle data set called "shootings", which recorded shootings in the past 5 years from 2015 to 2020, and each case represent a shooting with its victim's name, age, gender, race, state, city, weapon types etc, which accurately describe the details of the shooting. The second data source is a data set called "ZipGeography" from the DataComputing package in R, and it has the location, population and other information for each zip code.
+
+
