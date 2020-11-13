@@ -11,6 +11,8 @@ library(ggplot2)
 library(dplyr)
 library(usmap)
 library(usdata)
+ZipGeography <- read.delim("ZipGeography.txt")
+shootings <- read.csv("shootings.csv")
 ```
 
 ## Guiding Question
