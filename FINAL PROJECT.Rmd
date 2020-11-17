@@ -167,6 +167,15 @@ shootings %>% mutate(date = substr(as.character(date), 1, 7)) %>%
   filter(substr(date, 1, 4) == 2020 | substr(date, 1, 4) == 2019) %>% 
   ggplot(aes(x = date, group = race)) + 
   geom_density(aes(color = race, fill = race), alpha = 0.3) +
+  theme(axis.text.x = element_text(angle=90, size=5)) +
+  ggtitle("Shooting Case Density By Race 2019-2020") 
+```
+
+```{r}
+shootings %>% mutate(date = substr(as.character(date), 1, 7)) %>%
+  filter(substr(date, 1, 4) == 2020 | substr(date, 1, 4) == 2019) %>% 
+  ggplot(aes(x = date, group = race)) + 
+  geom_density(aes(color = race, fill = race), alpha = 0.3) +
   facet_wrap(~race) +
   theme(axis.text.x = element_text(angle=90, size=5)) +
   ggtitle("Shooting Case Density By Race 2019-2020") 
