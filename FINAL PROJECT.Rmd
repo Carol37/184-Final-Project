@@ -1,5 +1,5 @@
 ---
-title: "STAT 184 FINAL PROJECT" 
+title: "STAT 184 FINAL PROJECT REPORT" 
 author: "Jinhan Li"
 output: html_notebook
 ---
@@ -12,78 +12,53 @@ library(dplyr)
 library(usmap)
 library(usdata)
 library(tidyr)
+
+# read data files
 ZipGeography <- read.delim("ZipGeography.txt")
 shootings <- read.csv("shootings.csv")
 ```
 
 
 
-What is the distribution of shootings in each state and the relationships between race and shootings in the U.S.?
+    My guiding question for this project is: What is the distribution of police shootings in each state and the relationships between race and police shootings in the U.S.? I'm interested in this topic because U.S. police shootings is a hot topic right now. There were incidents of unjustice police shootings in multiple states and more and more people are protesting for their rights and racial equality. It makes me think, is race actually a critical factor in police shootings? Therefore, I decided to perform data analysis on a police shooting data set which contains police shooting records since 2015. And in order to see the distribution of shootings in each state using data visualization, I integrated the shootings data with another U.S. ZipGeography data which contains states and their population. I found my primary data source "Shootings" in a data set named "US Police Shootings" on Kaggle, and found my second data source "ZipGeography" in DataComputing package. 
 
+    During the investigation, I encountered a technical challenge that took me a long time to figure out. When trying to join the shootings dataset with the ZipGeography dataset, because the shootings dataset's state variable is the abbreviation of each state but the ZipGeography dataset's state variable is the full name of each state, I couldn't directly join them on the state variable. After looking into multiple different packages that can help me convert the state names, I finally found the easiest function abbr2state from the usdata package. I then used this function to convert the abbreviations of states in the shootings dataset into the full name of the states and performed a join on the transformed state variable of the two tables.
 
-
-* I found my primary data source "Shootings" in a data set named "US Police Shootings" on Kaggle. I found my second data source "ZipGeography" in DataComputing package in R.
-
-* Ahsen Nazir collected and maintains the "Shootings" data source, Daniel Kaplan collected and maintains the "ZipGeography" data source in DataComputing package in R.
-
-* "Shootings" data source was collected on 2020-07-29, and the collector collected this data because in the recent killings, "Racism" became a hot topic, so he gathered shootings data to analyze racism in America. "ZipGeography" data source was published on 2016-12-22, and the collector intended to compile the DataComputing package with "ZipGeography" as one data set to offer sample data set for R users to perform data analysis on U.S. geography.
-
-
-
-* A case in "Shootings" represents a shooting incident in the U.S; and 4895 cases are available. A case in "ZipGeography" represents an area zip code in the U.S. with its location, population etc.; and 42741 cases are available.
-
-* I plan to use name, date, age, gender, race, state, and arms_category variables in "Shootings" data source; I plan to use State and Population variables in "ZipGeography" data source.
-
-
-
-
-  Using the "Shootings" data source and "ZipGeography" data source, I was able to perform a join on the transformed data tables and get some observations from it. First of all, I graphed a U.S. map of the population density in each state to get a sense of the population distribution in the U.S., and it turns out that California, Texas, Florida and New York have the most population. 
-  And then, I used the transformed shooting data table to group by state and calculate the total count of shooting cases in each state, then I graphed it on a U.S. map to show the frequency of shootings in each state. Also, I graphed the shooting frequencies based on the states using a bar plot. Both of them showed that California, Texas and Florida have the most shootings.
-  
-  Moreover, I grouped shooting table by race and calculated the total counts of cases of each race and then graphed a bar plot to display the frequency of cases of each race in the past five years. The graph shows that white has the most shooting cases and black has the second most shooting cases. And based on this observation, surprisingly, black people aren't encountering the most shootings like I thought.
-  
-  Also, I grouped the shooting table by gender and plotted a bar plot to display the total counts of shootings of each gender, and as I expected, most shootings happened to males than females. And then, I grouped the table by state and race to take a look at the counts of shootings by both state and race, and the result shows for most states, white people are facing the most shootings.
-  
-  After I made some observations from the two data sources individually, I aggregated the ZipGeography table by state and transformed the table into a new population table with the state and its total population. And then, I joined the shooting table with the population table on state to get more observations. I first calculated the density of shootings in each state using the count of shootings in each state divided by its total population, and then graphed it on a map to show the density based on the color. In the graph, apparently, Alaska, New Mexico, Oklahoma and Arizona have the most dense shootings. I also graphed the shooting density by race using the counts of shootings of each race divided by the total population in the U.S., and apparently, white people are facing the most dense shootings followed by black people.
-  
-  Moreover, I grouped the shooting table by year and calculated the sum of shootings by race in each year and graphed them using a point plot and line plot, grouped and colored by race. On the plot, we can clearly see that white people are facing the most shootings comparing to all other races followed by black people and then Hispanics, when native, asian and others are facing the least shootings.
-  
-  Finally, I graphed the density plot of shootings for different race and I first plotted the data from 2019 to 2020, and then I graphed the entire range of data from 2015 to 2020. Based on the density plots, we can see that from 2019 to 2020, white people are facing the most shootings in November 2019 and black people are facing the most shootings in December 2019, and Hispanics are facing the most shootings in May 2019. At the meanwhile, in the entire time spam from 2015 to 2019, white people are facing the most shootings in 2015 and black people are facing the most shootings in 2015, and Hispanics are facing the most shootings in 2017.
-  
-  Overall, there are a few states facing the most shootings which are California, Texas and Florida. And that racism plays a part in shootings because according to my analysis, white people and black people tend to face the most shootings when the other races are facing the least shootings.
-
-
-
-The primary data source is a kaggle data set called "shootings", which recorded shootings in the past 5 years from 2015 to 2020, and each case represent a shooting with its victim's name, age, gender, race, state, city, weapon types etc, which accurately describe the details of the shooting. The second data source is a data set called "ZipGeography" from the DataComputing package in R, and it has the location, population and other information for each zip code.
-
-
-
+    The very first step for this analysis is to inspect and get familiar with the data, so I used head, str and summary functions to see what the data sets look like. In the results, we can see that a case in "Shootings" data represents a police shooting incident in the U.S, and there are 4895 cases in total; a case in "ZipGeography" represents an area zip code in the U.S. with its location, population etc., and there are 42741 cases in this data set. Based on my research question, I decided to keep name, date, age, gender, race, state, and arms_category variables in "Shootings" data and State, Population variables in "ZipGeography" data. 
 
 ```{r}
+# inspect data
 head(shootings)
 ```
 
 ```{r}
+# inspect data
 str(shootings)
 ```
 ```{r}
+# inspect data
 summary(shootings)
 ```
 
 
 ```{r}
+# inspect data
 head(ZipGeography)
 ```
 
 ```{r}
+# inspect data
 str(ZipGeography)
 ```
 ```{r}
+# inspect data
 summary(ZipGeography)
 ```
 
-
+    In this step, I filtered out the empty records in the shootings table and selected the name, date, age, gender, race, state, arms_category variables to keep, and transformed the abbreviation of states into the full names so that I can join this table with the other table later.
+     
 ```{r}
+# data wrangling
 shooting <- shootings %>% 
   filter(state != "") %>% 
   select(name, date, age, gender, race, state, arms_category) %>%
@@ -91,8 +66,11 @@ shooting <- shootings %>%
 
 shooting
 ```
-
+    
+    In this step, I filtered out the empty records in the ZipGeography data and grouped the records by state and summarised the sum of population for each state.
+    
 ```{r}
+# data wrangling
 pop <- ZipGeography %>%
   filter(State != "") %>% 
   group_by(State) %>% 
@@ -101,8 +79,10 @@ pop <- ZipGeography %>%
 pop
 ```
 
+    In this step, I created a new dataframe by grouping the shooting data by state and aggregate the count of shootings in each state. 
 
 ```{r}
+# aggregate the count of shootings in each state. 
 bystate <- shooting %>% 
   group_by(state) %>% 
   summarise(count = n()) 
@@ -110,20 +90,31 @@ bystate <- shooting %>%
 bystate
 ```
 
+    Here, I graphed the shooting frequency by states on a U.S. map, and the darker the color, the more shootings there are. On the map, we can see that California, Texas, Florida and Arizona have the most police shootings. In general, states on the coast of U.S. tend to have more shootings than states on the inland. 
+
 ```{r}
+# plot the shooting frequency by states
 plot_usmap(data=bystate, values = "count", color = "darkblue", labels=TRUE) +
    scale_fill_continuous(low = "white", high = "darkblue", name = "Shooting frequency by states", label = scales::comma) +
    theme(legend.position = "right") +
-   ggtitle("Shooting Frequency By States")
+   ggtitle("Police Shooting Frequency By States")
 ```
+
+    In the following code chunk, I graphed the shooting frequencies based on the states using a bar plot. In the plot, we can clearly see that California, Texas, Florida and Arizona have the most shootings. And among them, California has the most shootings even more than 600 cases.
+
 ```{r}
+# plot the shooting frequency by states
 bystate %>% mutate(state = state2abbr(state)) %>%
   ggplot(aes(x = state, y = count), ) +
   geom_bar(stat = 'identity', aes(fill = state)) +
-  ggtitle("Shooting Case Counts By States") +
+  ggtitle("Police Shooting Case Counts By States") +
   theme(axis.text.x = element_text(size = 3))
 ```
+
+    Next, I joined the bystate table with the pop table on state and mutated a new density variable which is the shootings frequency in each state divided by the state's population, and then I arranged the rows in descending order based on the density variable.
+
 ```{r}
+# join two tables and calculate the shooting density by states
 den_state <- bystate %>% 
   inner_join(pop, by = c("state" = "State")) %>% 
   mutate(density = count/Population) %>% 
@@ -132,14 +123,20 @@ den_state <- bystate %>%
 den_state
 ```
 
+    The following is the density map to show the density of shootings based on the color, and the darker the color, the more shootings there are. In the graph, apparently, Alaska, New Mexico, Oklahoma and Arizona and Nevada have the most dense shootings. In this case, we can see that the states with the most dense shootings are in the South West part of the U.S.. 
+
 ```{r}
+# plot the shooting density by states
 plot_usmap(data = den_state, values = "density", color = "brown", labels = TRUE) +
    scale_fill_continuous(low = "white", high = "brown", name = "Shooting density by states", label = scales::comma)+
    theme(legend.position = "right") +
-   ggtitle("Shooting Density By States")
+   ggtitle("Police Shooting Density By States")
 ```
 
+    Here, I grouped the shooting data by race and aggregated the counts of shootings of each race. Apparently, white and black people are facing the most police shootings.
+
 ```{r}
+# calculate the shooting counts by race
 byrace <- shooting %>% 
   group_by(race) %>% 
   summarise(count = n())
@@ -147,14 +144,20 @@ byrace <- shooting %>%
 byrace
 ```
 
+    Moreover, I grouped shooting table by race and calculated the total counts of cases of each race and then graphed a bar plot to display the frequency of cases of each race in the past five years. The graph shows that white people has the most shooting cases and black people has the second most shooting cases followed by hispanic people. And based on this observation, surprisingly, black people aren’t encountering the most shootings like I thought. On the contrary, white people have almost twice shootings as mush as black people. 
+
 ```{r}
+# plot the shooting counts by race
 byrace %>% 
   ggplot(aes(x = race, y = count)) +
   geom_bar(stat = 'identity', aes(fill = race)) +
-  ggtitle("Shooting Case Counts By Race") 
+  ggtitle("Police Shooting Case Counts By Race") 
 ```
 
+    And then, I grouped the table by state and race to take a look at the counts of shootings by both state and race. I also used a spread function for the race variable so that I can compare the counts of each race in each state easily. And the result shows: for most states, white people are facing the most shootings followed by black people, and there are barely any shootings of Native Americans or asians in any states.
+
 ```{r}
+# calculate the shooting counts by race for each state
 byrace_state <- shooting %>% 
   group_by(state, race) %>% 
   summarise(count = n()) %>%
@@ -163,8 +166,10 @@ byrace_state <- shooting %>%
 byrace_state
 ```
 
+    In the following step, I aggregated the shooting counts in each month from 2019 to 2020 grouped by race and plotted this point graph plus line graph. In the graph, we can see clearly that white people are facing the most shootings comparing to all other races, and black people are the second most followed by Hispanic people, when natives and asians are steadily facing the least shootings. More specifically, shootings of white and black people started growing after August 2019, when shootings of hispanic people started declinging after May 2019. 
 
 ```{r}
+# plot police shooting counts by race 2019-2020
 shooting %>% 
   mutate(date = gsub(pattern = "-.{2}$", replacement = "", x = date)) %>% 
   filter(substr(date, 1, 4) == 2020 | substr(date, 1, 4) == 2019) %>% 
@@ -174,10 +179,13 @@ shooting %>%
   geom_point(aes(color = race)) +
   geom_line(aes(group = race, color = race)) +
   theme(axis.text.x = element_text(angle = 90, size = 5)) +
-  ggtitle("Shooting Case Counts By Race 2019-2020") 
+  ggtitle("Police Shooting Case Counts By Race 2019-2020") 
 ```
 
+    In this line graph plus point graph, I looked at the counts of shootings of each race from 2015 to 2020. In the graph, we can see clearly that just like the last graph, white people are facing the most shootings comparing to all other races, and black people are the second most followed by Hispanic people, when natives and asians are steadily facing the least shootings. Moreover, shootings of white people shows a slightly declining trend since 2015, when black people shows a slightly increasing trend since 2018.  And shootings of hispanic people shows a slightly declining trend since late 2018.
+
 ```{r}
+# plot police shooting counts by race 2015-2020
 shooting %>% 
   mutate(date = gsub(pattern = "-.{2}$", replacement = "", x = date)) %>% 
   group_by(date, race) %>% 
@@ -186,34 +194,43 @@ shooting %>%
   geom_point(aes(color = race)) +
   geom_line(aes(group = race, color = race)) +
   theme(axis.text.x = element_text(angle = 90, size = 5)) +
-  ggtitle("Shooting Case Counts By Race 2015-2020") 
+  ggtitle("Police Shooting Case Counts By Race 2015-2020") 
 ```
 
+    Furthermore, I graphed the density plot of shootings for different race. I first plotted the data from 2019 to 2020; the first plot is the overlaid density plot which we can use to compare the density of each race, and the second plot is the multi-facet density plot which is easier for us to look at specific patterns in the each race. Based on the density plots, we can see that from 2019 to 2020, white people are facing the most shootings in November 2019 and black people are facing the most shootings in December 2019, and Hispanics are facing the most shootings in May 2019. And in general, the most shootings happened during sping and winter for all races.
+
 ```{r}
+# plot police shooting density by race 2019-2020
 shootings %>% mutate(date = gsub(pattern = "-.{2}$", replacement = "", x = date)) %>%
   filter(substr(date, 1, 4) == 2020 | substr(date, 1, 4) == 2019) %>% 
   ggplot(aes(x = date, group = race)) + 
   geom_density(aes(color = race, fill = race), alpha = 0.3) +
   theme(axis.text.x = element_text(angle = 90, size = 5)) +
-  ggtitle("Shooting Case Density By Race 2019-2020") 
+  ggtitle("Police Shooting Case Density By Race 2019-2020") 
 ```
-
 ```{r}
+# plot police shooting density by race 2019-2020
 shootings %>% mutate(date = gsub(pattern = "-.{2}$", replacement = "", x = date)) %>%
   filter(substr(date, 1, 4) == 2020 | substr(date, 1, 4) == 2019) %>% 
   ggplot(aes(x = date, group = race)) + 
   geom_density(aes(color = race, fill = race), alpha = 0.3) +
   facet_wrap(~race) +
   theme(axis.text.x = element_text(angle = 90, size = 5)) +
-  ggtitle("Shooting Case Density By Race 2019-2020") 
+  ggtitle("Police Shooting Case Density By Race 2019-2020") 
 ```
+
+    Finally, I graphed the density plot for the entire range of data from 2015 to 2020. In the plots, we can see that from 2015 to 2019, white people are facing the most shootings in 2015, black people are facing the most shootings in 2015, and Hispanics are facing the most shootings in 2017.
+
 ```{r}
+# plot police shooting density by race 2015-2020
 shootings %>% 
   mutate(date = gsub(pattern = "-.{2}$", replacement = "", x = date)) %>% 
   ggplot(aes(x = date, group = race)) + 
   geom_density(aes(color = race, fill = race), alpha = 0.3) +
   facet_wrap(~race) +
   theme(axis.text.x = element_text(angle = 90, size = 3)) +
-  ggtitle("Shooting Case Density By Race 2015-2020") 
+  ggtitle("Police Shooting Case Density By Race 2015-2020") 
 ```
 
+    In conclusion, there are a few states facing the most police shootings which are California, Texas and Florida. And in general, states on the coast have the most police shootings while the states in the South West have the most dense police shootings. Moreover, racism plays a part in shootings, because according to the analysis, white people and black people are facing the most police shootings throughout the entire time when the other races are facing minimum police shootings. And surprisingly, white people are facing twice as much shootings as black people, which is the opposite of my hypothesis.
+    
