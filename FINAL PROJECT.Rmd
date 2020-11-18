@@ -11,6 +11,7 @@ library(ggplot2)
 library(dplyr)
 library(usmap)
 library(usdata)
+library(tidyr)
 ZipGeography <- read.delim("ZipGeography.txt")
 shootings <- read.csv("shootings.csv")
 ```
@@ -63,25 +64,29 @@ summary(ZipGeography)
 ### Informative plots and summary statistics 
 
 ```{r}
-shooting <- shootings %>% filter(state != "") %>% select(name, date, age, gender, race, state, arms_category) %>% mutate(state = abbr2state(state))
+shooting <- shootings %>% 
+  filter(state != "") %>% 
+  select(name, date, age, gender, race, state, arms_category) %>%
+  mutate(state = abbr2state(state))
+
 shooting
 ```
 
 ```{r}
-pop <- ZipGeography %>% filter(State != "") %>% group_by(State) %>% summarise(Population = sum(Population, na.rm = TRUE))
+pop <- ZipGeography %>%
+  filter(State != "") %>% 
+  group_by(State) %>% 
+  summarise(Population = sum(Population, na.rm = TRUE))
+
 pop
 ```
 
-```{r}
-pop_p <- pop %>% mutate(state = State)
-plot_usmap(data = pop_p, values = "Population", color = "brown", labels = TRUE) +
-   scale_fill_continuous(low = "white", high = "brown", name = "Population by states", label = scales::comma) +
-   theme(legend.position = "right") +
-   ggtitle("Population By States")
-```
 
 ```{r}
-bystate <- shooting %>% group_by(state) %>% summarise(count = n()) 
+bystate <- shooting %>% 
+  group_by(state) %>% 
+  summarise(count = n()) 
+
 bystate
 ```
 
@@ -100,7 +105,10 @@ bystate %>% mutate(state = state2abbr(state)) %>%
 ```
 
 ```{r}
-byrace <- shooting %>% group_by(race) %>% summarise(count = n())
+byrace <- shooting %>% 
+  group_by(race) %>% 
+  summarise(count = n())
+
 byrace
 ```
 
@@ -112,49 +120,33 @@ byrace %>%
 ```
 
 ```{r}
-bygender <- shooting %>% group_by(gender) %>% summarise(count = n())
-bygender
-```
+byrace_state <- shooting %>% 
+  group_by(state, race) %>% 
+  summarise(count = n()) %>%
+  spread(key = race, value = count)
 
-```{r}
-bygender %>% 
-  ggplot(aes(x = gender, y = count)) +
-  geom_bar(stat = 'identity', aes(fill = gender)) +
-  ggtitle("Shooting Case Counts By Gender") 
-```
-
-```{r}
-byrace_state <- shooting %>% group_by(state, race) %>% summarise(count = n())
 byrace_state
 ```
 
 ```{r}
-den_state <- bystate %>% inner_join(pop, by = c("state" = "State")) %>% mutate(density = count/Population) %>% arrange(desc(density))
+den_state <- bystate %>% 
+  inner_join(pop, by = c("state" = "State")) %>% 
+  mutate(density = count/Population) %>% 
+  arrange(desc(density))
+
 den_state
 ```
 ```{r}
-plot_usmap(data = den_state, values = "density", color = "purple", labels = TRUE) +
-   scale_fill_continuous(low = "white", high = "purple", name = "Shooting density by states", label = scales::comma)+
+plot_usmap(data = den_state, values = "density", color = "brown", labels = TRUE) +
+   scale_fill_continuous(low = "white", high = "brown", name = "Shooting density by states", label = scales::comma)+
    theme(legend.position = "right") +
    ggtitle("Shooting Density By States")
 ```
 
-```{r}
-total <- pop %>% select(Population) %>% summarise(sum(Population))
-den_race <- byrace %>% mutate(Population = 281154175) %>% mutate(density = count/Population) %>% arrange(desc(density))
-den_race
-```
-
-```{r}
-den_race %>% 
-  ggplot(aes(x = race, y = density)) +
-  geom_bar(stat = 'identity', aes(fill = race)) +
-  ggtitle("Shooting Case Density By Race") 
-```
 
 ```{r}
 shooting %>% 
-  mutate(date = substr(as.character(date), 1, 4)) %>% 
+  mutate(date = gsub(pattern = "-.*", replacement = "", x = date)) %>% 
   group_by(date, race) %>% 
   summarise(total = n()) %>%
   ggplot(aes(x = date, y = total)) +
@@ -163,7 +155,7 @@ shooting %>%
   ggtitle("Shooting Case Counts By Race 2015-2020") 
 ```
 ```{r}
-shootings %>% mutate(date = substr(as.character(date), 1, 7)) %>%
+shootings %>% mutate(date = gsub(pattern = "-.{2}$", replacement = "", x = date)) %>%
   filter(substr(date, 1, 4) == 2020 | substr(date, 1, 4) == 2019) %>% 
   ggplot(aes(x = date, group = race)) + 
   geom_density(aes(color = race, fill = race), alpha = 0.3) +
@@ -172,7 +164,7 @@ shootings %>% mutate(date = substr(as.character(date), 1, 7)) %>%
 ```
 
 ```{r}
-shootings %>% mutate(date = substr(as.character(date), 1, 7)) %>%
+shootings %>% mutate(date = gsub(pattern = "-.{2}$", replacement = "", x = date)) %>%
   filter(substr(date, 1, 4) == 2020 | substr(date, 1, 4) == 2019) %>% 
   ggplot(aes(x = date, group = race)) + 
   geom_density(aes(color = race, fill = race), alpha = 0.3) +
@@ -182,7 +174,7 @@ shootings %>% mutate(date = substr(as.character(date), 1, 7)) %>%
 ```
 ```{r}
 shootings %>% 
-  mutate(date = substr(as.character(date), 1, 7)) %>% 
+  mutate(date = gsub(pattern = "-.{2}$", replacement = "", x = date)) %>% 
   ggplot(aes(x = date, group = race)) + 
   geom_density(aes(color = race, fill = race), alpha = 0.3) +
   facet_wrap(~race) +
@@ -209,14 +201,7 @@ shootings %>%
   Overall, there are a few states facing the most shootings which are California, Texas and Florida. And that racism plays a part in shootings because according to my analysis, white people and black people tend to face the most shootings when the other races are facing the least shootings.
 
 
-## TWO Data Sources
 
-```{r}
-shootings
-```
-```{r}
-ZipGeography
-```
 The primary data source is a kaggle data set called "shootings", which recorded shootings in the past 5 years from 2015 to 2020, and each case represent a shooting with its victim's name, age, gender, race, state, city, weapon types etc, which accurately describe the details of the shooting. The second data source is a data set called "ZipGeography" from the DataComputing package in R, and it has the location, population and other information for each zip code.
 
 
