@@ -30,7 +30,7 @@ output:  html_notebook
 
 
 (A) .Rmd Line number(s) for general data wrangling: 
-    61-79
+    61-79, 86-88, 118-121, 140-142, 161-163, 173-177, 189-192, 204-205, 213-214, 226-227 
 
 (B) .Rmd Line number(s) for a join operation: 
     117-121
@@ -42,7 +42,7 @@ output:  html_notebook
     174, 190, 204, 213, 227, 237
 
 (E) .Rmd Line number(s) for use of reduction and/or transformation functions: 
-    62-65, 74-77, 86-88, 118-121, 140-142, 161-163, 173-177, 189-192, 204-205, 213-214, 226-227
+    88, 120, 142, 163, 177, 192
 
 (F) .Rmd Line number(s) for use of user-defined functions: 
 

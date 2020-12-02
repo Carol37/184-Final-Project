@@ -16,9 +16,9 @@ library(tidyr)
 # read data files
 ZipGeography <- read.delim("ZipGeography.txt")
 shootings <- read.csv("shootings.csv")
+
+warning = FALSE
 ```
-
-
 
     My guiding question for this project is: What is the distribution of police shootings in each state and the relationships between race and police shootings in the U.S.? I'm interested in this topic because U.S. police shootings is a hot topic right now. There were incidents of unjustice police shootings in multiple states and more and more people are protesting for their rights and racial equality. It makes me think, is race actually a critical factor in police shootings? Therefore, I decided to perform data analysis on a police shooting data set which contains police shooting records since 2015. And in order to see the distribution of shootings in each state using data visualization, I integrated the shootings data with another U.S. ZipGeography data which contains states and their population. I found my primary data source "Shootings" in a data set named "US Police Shootings" on Kaggle, and found my second data source "ZipGeography" in DataComputing package. 
 
@@ -64,7 +64,7 @@ shooting <- shootings %>%
   select(name, date, age, gender, race, state, arms_category) %>%
   mutate(state = abbr2state(state))
 
-shooting
+head(shooting)
 ```
     
     In this step, I filtered out the empty records in the ZipGeography data and grouped the records by state and summarised the sum of population for each state.
@@ -76,7 +76,7 @@ pop <- ZipGeography %>%
   group_by(State) %>% 
   summarise(Population = sum(Population, na.rm = TRUE))
 
-pop
+head(pop)
 ```
 
     In this step, I created a new dataframe by grouping the shooting data by state and aggregate the count of shootings in each state. 
@@ -87,7 +87,7 @@ bystate <- shooting %>%
   group_by(state) %>% 
   summarise(count = n()) 
 
-bystate
+head(bystate)
 ```
 
     Here, I graphed the shooting frequency by states on a U.S. map, and the darker the color, the more shootings there are. On the map, we can see that California, Texas, Florida and Arizona have the most police shootings. In general, states on the coast of U.S. tend to have more shootings than states on the inland. 
@@ -120,7 +120,7 @@ den_state <- bystate %>%
   mutate(density = count/Population) %>% 
   arrange(desc(density))
 
-den_state
+head(den_state)
 ```
 
     The following is the density map to show the density of shootings based on the color, and the darker the color, the more shootings there are. In the graph, apparently, Alaska, New Mexico, Oklahoma and Arizona and Nevada have the most dense shootings. In this case, we can see that the states with the most dense shootings are in the South West part of the U.S.. 
@@ -163,7 +163,7 @@ byrace_state <- shooting %>%
   summarise(count = n()) %>%
   spread(key = race, value = count)
 
-byrace_state
+head(byrace_state)
 ```
 
     In the following step, I aggregated the shooting counts in each month from 2019 to 2020 grouped by race and plotted this point graph plus line graph. In the graph, we can see clearly that white people are facing the most shootings comparing to all other races, and black people are the second most followed by Hispanic people, when natives and asians are steadily facing the least shootings. More specifically, shootings of white and black people started growing after August 2019, when shootings of hispanic people started declinging after May 2019. 
@@ -240,5 +240,6 @@ shootings %>%
   theme(axis.text.x = element_text(angle = 90, size = 3)) +
   ggtitle("Police Shooting Case Density By Race 2015-2020") 
 ```
+
     In conclusion, there are a few states facing the most police shootings which are California, Texas and Florida. And in general, states on the coast have the most police shootings while the states in the South West have the most dense police shootings. Moreover, racism plays a part in shootings, because according to the analysis, white people and black people are facing the most police shootings throughout the entire time when the other races are facing minimum police shootings. And surprisingly, white people are facing twice as much shootings as black people, which is the opposite of my hypothesis.
     
