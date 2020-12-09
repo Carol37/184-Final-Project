@@ -16,16 +16,16 @@ library(tidyr)
 # read data files
 ZipGeography <- read.delim("ZipGeography.txt")
 shootings <- read.csv("shootings.csv")
-
 warning = FALSE
 ```
+### Research Question
 
     My guiding question for this project is: What is the distribution of police shootings in each state and the relationships between race and police shootings in the U.S.? I'm interested in this topic because U.S. police shootings is a hot topic right now. There were incidents of unjustice police shootings in multiple states and more and more people are protesting for their rights and racial equality. It makes me think, is race actually a critical factor in police shootings? Therefore, I decided to perform data analysis on a police shooting data set which contains police shooting records since 2015. And in order to see the distribution of shootings in each state using data visualization, I integrated the shootings data with another U.S. ZipGeography data which contains states and their population. I found my primary data source "Shootings" in a data set named "US Police Shootings" on Kaggle, and found my second data source "ZipGeography" in DataComputing package. 
-
+    
     During the investigation, I encountered a technical challenge that took me a long time to figure out. When trying to join the shootings dataset with the ZipGeography dataset, because the shootings dataset's state variable is the abbreviation of each state but the ZipGeography dataset's state variable is the full name of each state, I couldn't directly join them on the state variable. After looking into multiple different packages that can help me convert the state names, I finally found the easiest function abbr2state from the usdata package. I then used this function to convert the abbreviations of states in the shootings dataset into the full name of the states and performed a join on the transformed state variable of the two tables.
+### Data Wrangling
 
     The very first step for this analysis is to inspect and get familiar with the data, so I used head, str and summary functions to see what the data sets look like. In the results, we can see that a case in "Shootings" data represents a police shooting incident in the U.S, and there are 4895 cases in total; a case in "ZipGeography" represents an area zip code in the U.S. with its location, population etc., and there are 42741 cases in this data set. Based on my research question, I decided to keep name, date, age, gender, race, state, and arms_category variables in "Shootings" data and State, Population variables in "ZipGeography" data. 
-
 ```{r}
 # inspect data
 head(shootings)
@@ -78,9 +78,9 @@ pop <- ZipGeography %>%
 
 head(pop)
 ```
+### Data Visualization and Analysis
 
-    In this step, I created a new dataframe by grouping the shooting data by state and aggregate the count of shootings in each state. 
-
+    In this step, I created a new data frame by grouping the shooting data by state and aggregate the count of shootings in each state. 
 ```{r}
 # aggregate the count of shootings in each state. 
 bystate <- shooting %>% 
@@ -240,6 +240,6 @@ shootings %>%
   theme(axis.text.x = element_text(angle = 90, size = 3)) +
   ggtitle("Police Shooting Case Density By Race 2015-2020") 
 ```
+### Conclusion
 
     In conclusion, there are a few states facing the most police shootings which are California, Texas and Florida. And in general, states on the coast have the most police shootings while the states in the South West have the most dense police shootings. Moreover, racism plays a part in shootings, because according to the analysis, white people and black people are facing the most police shootings throughout the entire time when the other races are facing minimum police shootings. And surprisingly, white people are facing twice as much shootings as black people, which is the opposite of my hypothesis.
-    
